@@ -24,7 +24,7 @@ void TestManager::DestroyInstance()
 }
 bool TestManager::Initialize() // 초기화
 {
-	m_giveIdCounter = 0;
+	m_giveIdCounter = 1;
 	return true;
 }
 void TestManager::Release() // 후처리
@@ -75,15 +75,15 @@ void TestManager::Function(Session* _session)
 }
 void TestManager::IdCreateProcess(Session* _session)
 {
+	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 	BYTE l_data[BUFSIZE];
 	ZeroMemory(l_data, BUFSIZE);
 	int l_dataSize = -1;
-	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 	_session->m_id = m_giveIdCounter;
-	m_giveIdCounter++;
+	l_dataSize = IdDataMake(l_data, m_giveIdCounter);
 	m_playerList.push_back(_session);
-
-	l_dataSize = IdDataMake(l_data,_session->m_id);
+	m_giveIdCounter++;
+	
 
 	if (!_session->SendPacket(static_cast<int>(E_PROTOCOL::STC_IDCREATE), l_dataSize, l_data))
 	{
@@ -98,7 +98,7 @@ void TestManager::SpawnProcess(Session* _session)
 
 	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 
-	
+
 	l_dataSize = SpawnDataMake(l_data);
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
@@ -215,15 +215,6 @@ void TestManager::ForceExitProcess(Session* _session)
 }
 
 
-//int TestManager::SpawnDataMake(BYTE* _data, int _id)
-//{
-//	int l_packedSize = 0;
-//	BYTE* l_focusPointer = _data;
-//
-//	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _id);
-//
-//	return l_packedSize;
-//}
 int TestManager::IdDataMake(BYTE* _data, int _id)
 {
 	int l_packedSize = 0;
@@ -238,23 +229,20 @@ int TestManager::SpawnDataMake(BYTE* _data)
 	int l_packedSize = 0;
 	BYTE* l_focusPointer = _data;
 	int counter = 5;
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, counter);
-
+	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, static_cast<int>(m_playerList.size()));
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{
 		l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, (*iter)->m_id);
 		counter--;
 	}
-	if (counter != 0)
+
+	while (counter > 0)
 	{
-		while (counter > 0)
+		l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, -1);
+		counter--;
+		if (counter <= 0)
 		{
-			l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, -5000);
-			counter--;
-			if (counter <= 0)
-			{
-				break;
-			}
+			break;
 		}
 	}
 
