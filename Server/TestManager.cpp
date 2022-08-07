@@ -56,13 +56,16 @@ void TestManager::Function(Session* _session)
 	E_PROTOCOL l_protocol = static_cast<E_PROTOCOL>(_session->GetProtocol());
 	switch (l_protocol)
 	{
-	case TestManager::E_PROTOCOL::SPAWN:
+	case TestManager::E_PROTOCOL::CTS_IDCREATE:
+		IdCreateProcess(_session);
+		break;
+	case TestManager::E_PROTOCOL::CTS_SPAWN:
 		SpawnProcess(_session);
 		break;
-	case TestManager::E_PROTOCOL::MOVE:
+	case TestManager::E_PROTOCOL::CTS_MOVE:
 		PlayProcess(_session);
 		break;
-	case TestManager::E_PROTOCOL::EXIT:
+	case TestManager::E_PROTOCOL::CTS_EXIT:
 		ExitProcess(_session);
 		break;
 	default:
@@ -70,45 +73,43 @@ void TestManager::Function(Session* _session)
 		break;
 	}
 }
+void TestManager::IdCreateProcess(Session* _session)
+{
+	BYTE l_data[BUFSIZE];
+	ZeroMemory(l_data, BUFSIZE);
+	int l_dataSize = -1;
+	LockGuard l_lockGuard(&m_criticalKey); // 잠금
+	_session->m_id = m_giveIdCounter;
+	m_giveIdCounter++;
+	m_playerList.push_back(_session);
 
+	l_dataSize = IdDataMake(l_data,_session->m_id);
+
+	if (!_session->SendPacket(static_cast<int>(E_PROTOCOL::STC_IDCREATE), l_dataSize, l_data))
+	{
+		LogManager::GetInstance()->LogWrite(1005);
+	}
+}
 void TestManager::SpawnProcess(Session* _session)
 {
 	BYTE l_data[BUFSIZE];
 	ZeroMemory(l_data, BUFSIZE);
 	int l_dataSize = -1;
 
-	BYTE l_data2[BUFSIZE];
-	ZeroMemory(l_data2, BUFSIZE);
-	int l_dataSize2 = -1;
-
 	LockGuard l_lockGuard(&m_criticalKey); // 잠금
-	
 
+	
+	l_dataSize = SpawnDataMake(l_data);
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{
-		ZeroMemory(l_data, BUFSIZE);
-		l_dataSize = SpawnDataMake(l_data, (*iter)->m_id);
-		if (!_session->SendPacket(static_cast<int>(E_PROTOCOL::INUSER), l_dataSize, l_data))
+		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::STC_SPAWN), l_dataSize, l_data))
 		{
 			LogManager::GetInstance()->LogWrite(1005);
 		}
 	}
 
-	m_playerList.push_back(_session);
-	l_dataSize2 = SpawnDataMake(l_data2, m_giveIdCounter);
-	_session->m_id = m_giveIdCounter;
-	m_giveIdCounter++;
 
-	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
-	{
-		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::INUSER), l_dataSize2, l_data2))
-		{
-			LogManager::GetInstance()->LogWrite(1005);
-		}
-	}
-
-	
 	return;
 }
 
@@ -125,7 +126,7 @@ void TestManager::PlayProcess(Session* _session)
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{
-		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::MOVEUSER), l_dataSize, l_data))
+		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::STC_MOVE), l_dataSize, l_data))
 		{
 			LogManager::GetInstance()->LogWrite(1006);
 		}
@@ -147,12 +148,12 @@ void TestManager::ExitProcess(Session* _session)
 	{
 		if ((*iter) == _session)
 		{
-			if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::EXIT), l_dataSize, l_data))
+			if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::STC_EXIT), l_dataSize, l_data))
 			{
 				LogManager::GetInstance()->LogWrite(1006);
 			}
 		}
-		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::OUTUSER), l_dataSize, l_data))
+		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::STC_OUT), l_dataSize, l_data))
 		{
 			LogManager::GetInstance()->LogWrite(1006);
 		}
@@ -187,12 +188,12 @@ void TestManager::ForceExitProcess(Session* _session)
 	{
 		if ((*iter) == _session)
 		{
-			if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::EXIT), l_dataSize, l_data))
+			if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::STC_EXIT), l_dataSize, l_data))
 			{
 				LogManager::GetInstance()->LogWrite(1006);
 			}
 		}
-		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::OUTUSER), l_dataSize, l_data))
+		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::STC_OUT), l_dataSize, l_data))
 		{
 			LogManager::GetInstance()->LogWrite(1006);
 		}
@@ -214,15 +215,52 @@ void TestManager::ForceExitProcess(Session* _session)
 }
 
 
-int TestManager::SpawnDataMake(BYTE* _data, int _id)
+//int TestManager::SpawnDataMake(BYTE* _data, int _id)
+//{
+//	int l_packedSize = 0;
+//	BYTE* l_focusPointer = _data;
+//
+//	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _id);
+//
+//	return l_packedSize;
+//}
+int TestManager::IdDataMake(BYTE* _data, int _id)
 {
 	int l_packedSize = 0;
 	BYTE* l_focusPointer = _data;
 
 	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _id);
+	return l_packedSize;
+}
+
+int TestManager::SpawnDataMake(BYTE* _data)
+{
+	int l_packedSize = 0;
+	BYTE* l_focusPointer = _data;
+	int counter = 5;
+	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, counter);
+
+	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
+	{
+		l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, (*iter)->m_id);
+		counter--;
+	}
+	if (counter != 0)
+	{
+		while (counter > 0)
+		{
+			l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, -5000);
+			counter--;
+			if (counter <= 0)
+			{
+				break;
+			}
+		}
+	}
 
 	return l_packedSize;
 }
+
 
 int TestManager::MoveDataMake(BYTE* _data, int _id, float _x, float _y)
 {

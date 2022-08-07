@@ -24,24 +24,35 @@ public:
 	enum class E_PROTOCOL
 	{
 		CRYPTOKEY,		// 서버 -> 클라				:	초기 암복호화키 전송 신호
-		SPAWN,	// 서버 -> 클라, 클라 -> 서버 :  스폰 신호
-		MOVE,	// 서버 -> 클라, 클라 -> 서버 :  이동 신호
-		EXIT,	// 서버 -> 클라, 클라 -> 서버 :  종료 신호	
 
-		INUSER = 10,
-		MOVEUSER = 20,
-		OUTUSER = 30,
+		STC_IDCREATE,
+		CTS_IDCREATE,
+
+		STC_SPAWN,
+		CTS_SPAWN,
+
+		STC_MOVE,
+		CTS_MOVE,
+
+		STC_OUT,
+		CTS_OUT,
+
+		STC_EXIT,
+		CTS_EXIT,
 	};
 
 	void Function(Session* _session);
 
+	void IdCreateProcess(Session* _session);
 	void SpawnProcess(Session* _session);
 	void PlayProcess(Session* _session);
 	void ExitProcess(Session* _session);
 	void ForceExitProcess(Session* _session);
 #pragma region Packing&Unpacking
 	// packing
-	int SpawnDataMake(BYTE* _data, int _id);
+	//int SpawnDataMake(BYTE* _data, int _id);
+	int IdDataMake(BYTE* _data,int _id);
+	int SpawnDataMake(BYTE* _data);
 	int MoveDataMake(BYTE* _data, int _id, float _x, float _y);
 	int ExitDataMake(BYTE* _data, int _id);
 	// unpacking
