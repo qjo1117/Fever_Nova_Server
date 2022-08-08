@@ -15,15 +15,19 @@ public class NetWorkManager : MonoBehaviour
 
     void Start()
     {
-        m_moveData.m_x = 0;
-        m_moveData.m_y = 0;
+        m_moveData.m_positionX = 0;
+        m_moveData.m_positionZ = 0;
+
+        m_moveData.m_rotationY = 0;
+        m_moveData.m_moveX = 10;
+        m_moveData.m_animing = 5;
+        
         session = new Session();
         session.Initialize();
     }
     public GameObject playerUnit;
     public List<GameObject> players = new List<GameObject>();
 
-    public int m_id;
     public PacketMoveData m_moveData;
 
     private void Update()
@@ -51,12 +55,20 @@ public class NetWorkManager : MonoBehaviour
         }
         if (Input.GetKey(KeyCode.Q))
         {
-            m_moveData.m_rotationY -= Time.deltaTime * 1;
+            m_moveData.m_rotationY -= Time.deltaTime * 30;
+            if(m_moveData.m_rotationY < 0 )
+            {
+                m_moveData.m_rotationY = 360;
+            }
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.E))
         {
-            m_moveData.m_rotationY += Time.deltaTime * 1;
+            m_moveData.m_rotationY += Time.deltaTime * 30;
+            if (m_moveData.m_rotationY > 360)
+            {
+                m_moveData.m_rotationY = 0;
+            }
             l_isMove = true;
         }
 
@@ -97,7 +109,7 @@ public class NetWorkManager : MonoBehaviour
                     {
                         IDData liddata;
                         session.GetData<IDData>(out liddata);
-                        m_id = liddata.m_id;
+                        m_moveData.m_id = liddata.m_id;
                         session.Write((int)E_PROTOCOL.CTS_SPAWN);
                     }
                     break;
@@ -107,9 +119,9 @@ public class NetWorkManager : MonoBehaviour
                         ListData liddata;
                         session.GetData<ListData>(out liddata);
 
-                        for(int i=0; i< liddata.m_size; i++)
+                        for (int i = 0; i < liddata.m_size; i++)
                         {
-                            if(liddata.m_list[i] == -1)
+                            if (liddata.m_list[i] == -1)
                             {
                                 continue;
                             }
@@ -129,7 +141,7 @@ public class NetWorkManager : MonoBehaviour
                                 temp.SetActive(true);
                             }
                         }
-                        
+
                     }
                     break;
                 case (int)E_PROTOCOL.STC_MOVE:
@@ -137,14 +149,15 @@ public class NetWorkManager : MonoBehaviour
                         int lid;
                         float lx;
                         float ly;
-                        RecvMoveData lData;
-                        session.GetData<RecvMoveData>(out lData);
+                        PacketMoveData lData;
+                        session.GetData<PacketMoveData>(out lData);
                         foreach (GameObject obj in players)
                         {
                             if (obj.GetComponent<Player>().id == lData.m_id)
                             {
-                                obj.GetComponent<Player>().x = lData.m_x;
-                                obj.GetComponent<Player>().y = lData.m_y;
+                                obj.GetComponent<Player>().x = lData.m_positionX;
+                                obj.GetComponent<Player>().y = lData.m_positionZ;
+                                obj.GetComponent<Player>().m_r = lData.m_rotationY;
                             }
                         }
                     }

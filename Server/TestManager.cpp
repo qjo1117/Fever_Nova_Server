@@ -118,11 +118,18 @@ void TestManager::PlayProcess(Session* _session)
 	BYTE l_data[BUFSIZE];
 	ZeroMemory(l_data, BUFSIZE);
 	int l_dataSize = -1;
-	float l_x;
-	float l_y;
-	MoveDataSplit(_session->GetDataField(), &l_x, &l_y);
 
-	l_dataSize = MoveDataMake(l_data, _session->m_id, l_x, l_y);
+	int l_id;
+	float l_px;
+	float l_pz;
+	float l_ry;
+	float l_mx;
+	float l_mz;
+	float l_ani;
+
+	MoveDataSplit(_session->GetDataField(), &l_id, &l_px, &l_pz, &l_ry, &l_mx, &l_mz, &l_ani);
+
+	l_dataSize = MoveDataMake(l_data, _session->m_id, l_px, l_pz, l_ry, l_mx, l_mz, l_ani);
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{
