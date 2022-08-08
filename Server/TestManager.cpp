@@ -1,7 +1,7 @@
 #include "TestManager.h"
 #include "LogManager.h"
 #include "SessionManager.h"
-
+//¤¶¤§
 #pragma region Singleton
 bool TestManager::CreateInstance()
 {
