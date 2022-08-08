@@ -54,6 +54,7 @@ public:
 		float m_moveX;
 		float m_moveZ;
 		float m_animing;
+		int m_state;
 	};
 
 	void Function(Session* _session);
@@ -71,7 +72,6 @@ public:
 	int MoveDataMake(BYTE* _data, MoveData _moveData);
 	int ExitDataMake(BYTE* _data, int _id);
 	// unpacking
-	void MoveDataSplit(BYTE* _data, float* _x, float* _y);
 	void MoveDataSplit(BYTE* _data, MoveData& _moveData);
 #pragma endregion
 private:

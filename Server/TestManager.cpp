@@ -255,20 +255,7 @@ int TestManager::MoveDataMake(BYTE* _data, MoveData _moveData)
 	int l_packedSize = 0;
 	BYTE* l_focusPointer = _data;
 
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_id);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_positionX);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_positionY);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_positionZ);
-
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_rotationX);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_rotationY);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_rotationZ);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_rotationW);
-
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_moveX);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_moveZ);
-
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData.m_animing);
+	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveData);
 
 	return l_packedSize;
 }
@@ -288,32 +275,6 @@ void TestManager::MoveDataSplit(BYTE* _data, MoveData& _moveData)
 {
 	BYTE* l_focusPointer = _data;
 
-	memcpy(&_moveData.m_id, l_focusPointer, sizeof(int));
-	l_focusPointer = l_focusPointer + sizeof(int);
-
-	memcpy(&_moveData.m_positionX, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-	memcpy(&_moveData.m_positionY, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-	memcpy(&_moveData.m_positionZ, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-
-	memcpy(&_moveData.m_rotationX, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-	memcpy(&_moveData.m_rotationY, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-	memcpy(&_moveData.m_rotationZ, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-	memcpy(&_moveData.m_rotationW, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-
-	memcpy(&_moveData.m_moveX, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-	memcpy(&_moveData.m_moveZ, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(&_moveData.m_animing, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
+	memcpy(&_moveData, l_focusPointer, sizeof(MoveData));
+	l_focusPointer = l_focusPointer + sizeof(MoveData);
 }

@@ -42,6 +42,9 @@ public struct PacketMoveData
 
     [MarshalAs(UnmanagedType.R4)]
     public float m_animing;
+
+    [MarshalAs(UnmanagedType.I4)]
+    public int m_state;
 }
 
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]

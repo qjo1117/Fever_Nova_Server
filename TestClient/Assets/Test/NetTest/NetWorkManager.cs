@@ -24,11 +24,11 @@ public class NetWorkManager : MonoBehaviour
         m_moveData.m_rotationZ = 0;
         m_moveData.m_rotationW = 0;
 
-        m_moveData.m_moveX = 10;
-        m_moveData.m_moveZ = 10;
+        m_moveData.m_moveX = 100;
+        m_moveData.m_moveZ = 200;
 
-        m_moveData.m_animing = 5;
-        
+        m_moveData.m_animing = 50;
+        m_moveData.m_state = 101;
         session = new Session();
         session.Initialize();
     }
@@ -162,18 +162,7 @@ public class NetWorkManager : MonoBehaviour
                         {
                             if (obj.GetComponent<Player>().moveData.m_id == lData.m_id)
                             {
-                                obj.GetComponent<Player>().moveData.m_positionX = lData.m_positionX;
-                                obj.GetComponent<Player>().moveData.m_positionY = lData.m_positionY;
-                                obj.GetComponent<Player>().moveData.m_positionZ = lData.m_positionZ;
-
-                                obj.GetComponent<Player>().moveData.m_rotationX = lData.m_rotationX;
-                                obj.GetComponent<Player>().moveData.m_rotationY = lData.m_rotationY;
-                                obj.GetComponent<Player>().moveData.m_rotationZ = lData.m_rotationZ;
-                                obj.GetComponent<Player>().moveData.m_rotationW = lData.m_rotationW;
-
-                                obj.GetComponent<Player>().moveData.m_moveX = lData.m_moveX;
-                                obj.GetComponent<Player>().moveData.m_moveZ = lData.m_moveZ;
-                                obj.GetComponent<Player>().moveData.m_animing = lData.m_animing;
+                                obj.GetComponent<Player>().moveData = lData;
                             }
                         }
                     }
