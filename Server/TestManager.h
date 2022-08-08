@@ -54,12 +54,9 @@ public:
 	int IdDataMake(BYTE* _data,int _id);
 	int SpawnDataMake(BYTE* _data);
 	int MoveDataMake(BYTE* _data, int _id, float _x, float _y);
-	int MoveDataMake(BYTE* _data, int _id, float _positionX, float _positionZ, float _rotationY, float _moveX, float _moveZ, float _animing);
 	int ExitDataMake(BYTE* _data, int _id);
 	// unpacking
 	void MoveDataSplit(BYTE* _data, float* _x, float* _y);
-	void MoveDataSplit(BYTE* _data, int* _id, float* _positionX, float* _positionZ, float* _rotationY, float* _moveX, float* _moveZ, float* _animing);
-	void MoveDataSplit(BYTE* _data, float* _positionX, float* _positionZ, float* _rotationY, float* _moveX, float* _moveZ, float* _animing);
 #pragma endregion
 private:
 	CriticalKey m_criticalKey;

@@ -262,22 +262,6 @@ int TestManager::MoveDataMake(BYTE* _data, int _id, float _x, float _y)
 	return l_packedSize;
 }
 
-int TestManager::MoveDataMake(BYTE* _data, int _id, float _positionX, float _positionZ,float _rotationY,float _moveX, float _moveZ, float _animing)
-{
-	int l_packedSize = 0;
-	BYTE* l_focusPointer = _data;
-
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _id);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _positionX);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _positionZ);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _rotationY);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveX);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _moveZ);
-	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, _animing);
-
-	return l_packedSize;
-}
-
 int TestManager::ExitDataMake(BYTE* _data, int _id)
 {
 	int l_packedSize = 0;
@@ -297,54 +281,5 @@ void TestManager::MoveDataSplit(BYTE* _data, float* _x, float* _y)
 	l_focusPointer = l_focusPointer + sizeof(float);
 
 	memcpy(_y, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-}
-
-void TestManager::MoveDataSplit(BYTE* _data, int* _id, float* _positionX, float* _positionZ, float* _rotationY, float* _moveX, float* _moveZ, float* _animing)
-{
-	BYTE* l_focusPointer = _data;
-
-	memcpy(_id, l_focusPointer, sizeof(int));
-	l_focusPointer = l_focusPointer + sizeof(int);
-
-	memcpy(_positionX, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_positionZ, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_rotationY, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_moveX, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_moveZ, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_animing, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-}
-
-void TestManager::MoveDataSplit(BYTE* _data, float* _positionX, float* _positionZ, float* _rotationY, float* _moveX, float* _moveZ, float* _animing)
-{
-	BYTE* l_focusPointer = _data;
-
-	memcpy(_positionX, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_positionZ, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_rotationY, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_moveX, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_moveZ, l_focusPointer, sizeof(float));
-	l_focusPointer = l_focusPointer + sizeof(float);
-
-	memcpy(_animing, l_focusPointer, sizeof(float));
 	l_focusPointer = l_focusPointer + sizeof(float);
 }
