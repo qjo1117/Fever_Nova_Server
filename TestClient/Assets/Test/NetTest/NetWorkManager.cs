@@ -16,10 +16,17 @@ public class NetWorkManager : MonoBehaviour
     void Start()
     {
         m_moveData.m_positionX = 0;
+        m_moveData.m_positionY = 0;
         m_moveData.m_positionZ = 0;
 
+        m_moveData.m_rotationX = 0;
         m_moveData.m_rotationY = 0;
+        m_moveData.m_rotationZ = 0;
+        m_moveData.m_rotationW = 0;
+
         m_moveData.m_moveX = 10;
+        m_moveData.m_moveZ = 10;
+
         m_moveData.m_animing = 5;
         
         session = new Session();
@@ -45,30 +52,30 @@ public class NetWorkManager : MonoBehaviour
         }
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            m_moveData.m_positionZ -= Time.deltaTime * 1;
+            m_moveData.m_positionY -= Time.deltaTime * 1;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            m_moveData.m_positionZ += Time.deltaTime * 1;
+            m_moveData.m_positionY += Time.deltaTime * 1;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.Q))
         {
-            m_moveData.m_rotationY -= Time.deltaTime * 30;
-            if(m_moveData.m_rotationY < 0 )
-            {
-                m_moveData.m_rotationY = 360;
-            }
+            transform.Rotate(Time.deltaTime *  new Vector3(0, -30, 0));
+            m_moveData.m_rotationX = transform.rotation.x;
+            m_moveData.m_rotationY = transform.rotation.y;
+            m_moveData.m_rotationZ = transform.rotation.z;
+            m_moveData.m_rotationW = transform.rotation.w;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.E))
         {
-            m_moveData.m_rotationY += Time.deltaTime * 30;
-            if (m_moveData.m_rotationY > 360)
-            {
-                m_moveData.m_rotationY = 0;
-            }
+            transform.Rotate(Time.deltaTime * new Vector3(0, 30, 0));
+            m_moveData.m_rotationX = transform.rotation.x;
+            m_moveData.m_rotationY = transform.rotation.y;
+            m_moveData.m_rotationZ = transform.rotation.z;
+            m_moveData.m_rotationW = transform.rotation.w;
             l_isMove = true;
         }
 
@@ -128,7 +135,7 @@ public class NetWorkManager : MonoBehaviour
                             bool flag = true;
                             foreach (GameObject obj in players)
                             {
-                                if (obj.GetComponent<Player>().id == liddata.m_list[i])
+                                if (obj.GetComponent<Player>().moveData.m_id == liddata.m_list[i])
                                 {
                                     flag = false;
                                 }
@@ -136,7 +143,7 @@ public class NetWorkManager : MonoBehaviour
                             if (flag)
                             {
                                 GameObject temp = GameObject.Instantiate(playerUnit);
-                                temp.GetComponent<Player>().id = liddata.m_list[i];
+                                temp.GetComponent<Player>().moveData.m_id = liddata.m_list[i];
                                 players.Add(temp);
                                 temp.SetActive(true);
                             }
@@ -153,11 +160,20 @@ public class NetWorkManager : MonoBehaviour
                         session.GetData<PacketMoveData>(out lData);
                         foreach (GameObject obj in players)
                         {
-                            if (obj.GetComponent<Player>().id == lData.m_id)
+                            if (obj.GetComponent<Player>().moveData.m_id == lData.m_id)
                             {
-                                obj.GetComponent<Player>().x = lData.m_positionX;
-                                obj.GetComponent<Player>().y = lData.m_positionZ;
-                                obj.GetComponent<Player>().m_r = lData.m_rotationY;
+                                obj.GetComponent<Player>().moveData.m_positionX = lData.m_positionX;
+                                obj.GetComponent<Player>().moveData.m_positionY = lData.m_positionY;
+                                obj.GetComponent<Player>().moveData.m_positionZ = lData.m_positionZ;
+
+                                obj.GetComponent<Player>().moveData.m_rotationX = lData.m_rotationX;
+                                obj.GetComponent<Player>().moveData.m_rotationY = lData.m_rotationY;
+                                obj.GetComponent<Player>().moveData.m_rotationZ = lData.m_rotationZ;
+                                obj.GetComponent<Player>().moveData.m_rotationW = lData.m_rotationW;
+
+                                obj.GetComponent<Player>().moveData.m_moveX = lData.m_moveX;
+                                obj.GetComponent<Player>().moveData.m_moveZ = lData.m_moveZ;
+                                obj.GetComponent<Player>().moveData.m_animing = lData.m_animing;
                             }
                         }
                     }
@@ -169,7 +185,7 @@ public class NetWorkManager : MonoBehaviour
                         session.GetData<IDData>(out liddata);
                         foreach (GameObject obj in players)
                         {
-                            if (obj.GetComponent<Player>().id == liddata.m_id)
+                            if (obj.GetComponent<Player>().moveData.m_id == liddata.m_id)
                             {
                                 Destroy(obj);
                                 players.Remove(obj);

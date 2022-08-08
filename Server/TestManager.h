@@ -41,6 +41,21 @@ public:
 		CTS_EXIT,
 	};
 
+	struct MoveData
+	{
+		int m_id;
+		float m_positionX;
+		float m_positionY;
+		float m_positionZ;
+		float m_rotationX;
+		float m_rotationY;
+		float m_rotationZ;
+		float m_rotationW;
+		float m_moveX;
+		float m_moveZ;
+		float m_animing;
+	};
+
 	void Function(Session* _session);
 
 	void IdCreateProcess(Session* _session);
@@ -53,17 +68,17 @@ public:
 	//int SpawnDataMake(BYTE* _data, int _id);
 	int IdDataMake(BYTE* _data,int _id);
 	int SpawnDataMake(BYTE* _data);
-	int MoveDataMake(BYTE* _data, int _id, float _x, float _y);
-	int MoveDataMake(BYTE* _data, int _id, float _positionX, float _positionZ, float _rotationY, float _moveX, float _moveZ, float _animing);
+	int MoveDataMake(BYTE* _data, MoveData _moveData);
 	int ExitDataMake(BYTE* _data, int _id);
 	// unpacking
 	void MoveDataSplit(BYTE* _data, float* _x, float* _y);
-	void MoveDataSplit(BYTE* _data, int* _id, float* _positionX, float* _positionZ, float* _rotationY, float* _moveX, float* _moveZ, float* _animing);
-	void MoveDataSplit(BYTE* _data, float* _positionX, float* _positionZ, float* _rotationY, float* _moveX, float* _moveZ, float* _animing);
+	void MoveDataSplit(BYTE* _data, MoveData& _moveData);
 #pragma endregion
 private:
 	CriticalKey m_criticalKey;
 	int m_giveIdCounter;
 	list<Session*> m_playerList;
+
+	
 };
 

@@ -22,10 +22,18 @@ public struct PacketMoveData
     [MarshalAs(UnmanagedType.R4)]
     public float m_positionX;
     [MarshalAs(UnmanagedType.R4)]
+    public float m_positionY;
+    [MarshalAs(UnmanagedType.R4)]
     public float m_positionZ;
 
     [MarshalAs(UnmanagedType.R4)]
+    public float m_rotationX;
+    [MarshalAs(UnmanagedType.R4)]
     public float m_rotationY;
+    [MarshalAs(UnmanagedType.R4)]
+    public float m_rotationZ;
+    [MarshalAs(UnmanagedType.R4)]
+    public float m_rotationW;
 
     [MarshalAs(UnmanagedType.R4)]
     public float m_moveX;

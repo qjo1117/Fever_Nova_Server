@@ -4,12 +4,11 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public int id;
-    public float x;
-    public float y;
-    public float m_r;
+    public PacketMoveData moveData;
     private void Update()
     {
-        gameObject.transform.SetPositionAndRotation(new Vector3(x, y, 0), Quaternion.Euler(0, m_r, 0));
+        gameObject.transform.SetPositionAndRotation(
+            new Vector3(moveData.m_positionX, moveData.m_positionY, moveData.m_positionZ), 
+            new Quaternion(moveData.m_rotationX, moveData.m_rotationY, moveData.m_rotationZ, moveData.m_rotationW));
     }
 }
