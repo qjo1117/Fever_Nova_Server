@@ -24,29 +24,39 @@ public class NetWorkManager : MonoBehaviour
     public List<GameObject> players = new List<GameObject>();
 
     public int m_id;
-    public MoveData m_moveData;
+    public PacketMoveData m_moveData;
 
     private void Update()
     {
         bool l_isMove = false;
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            m_moveData.m_x -= Time.deltaTime * 1;
+            m_moveData.m_positionX -= Time.deltaTime * 1;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            m_moveData.m_x += Time.deltaTime * 1;
+            m_moveData.m_positionX += Time.deltaTime * 1;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            m_moveData.m_y -= Time.deltaTime * 1;
+            m_moveData.m_positionZ -= Time.deltaTime * 1;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            m_moveData.m_y += Time.deltaTime * 1;
+            m_moveData.m_positionZ += Time.deltaTime * 1;
+            l_isMove = true;
+        }
+        if (Input.GetKey(KeyCode.Q))
+        {
+            m_moveData.m_rotationY -= Time.deltaTime * 1;
+            l_isMove = true;
+        }
+        if (Input.GetKey(KeyCode.E))
+        {
+            m_moveData.m_rotationY += Time.deltaTime * 1;
             l_isMove = true;
         }
 
