@@ -5,21 +5,60 @@ using UnityEngine;
 public class MainManager : MonoBehaviour
 {
     private NetWorkManager m_network = new NetWorkManager();
+
+
     private void Awake()
     {
-        Screen.SetResolution(600, 900, false);
+        Screen.SetResolution(900, 600, false);
     }
+    public FollowCam followCam;
     public GameObject playerUnit;
     public Dictionary<int, GameObject> players = new Dictionary<int, GameObject>();
+
+    #region 플레이어 컨트롤 변수
+    public Player m_mainPlayer;
+    float X;
+    float Z;
+    bool jumpDown;
+    public Vector3 m_moveVector;
+
     public float m_moveSpeed;
     public float m_rotateSpeed;
-    private Player m_mainPlayer;
+    public float m_jumpPower;
     public PacketMoveData m_mainPlayerData;
-    // Start is called before the first frame update
+    #endregion
+
+    #region 플레이어 컨트롤 함수
+    void GetInput()
+    {
+        X = Input.GetAxis("Horizontal");
+        Z = Input.GetAxis("Vertical");
+        jumpDown = Input.GetKeyDown(KeyCode.Space);
+    }
+    void Move()
+    {
+        m_moveVector = new Vector3(X, 0, Z).normalized;
+        m_mainPlayer.transform.position += m_moveVector * m_moveSpeed * Time.deltaTime;
+    }
+    void Turn()
+    {
+        m_mainPlayer.transform.LookAt(m_mainPlayer.transform.position + m_moveVector);
+    }
+    void Jump()
+    {
+        if (jumpDown && !m_mainPlayer.isJump)
+        {
+            m_mainPlayer.m_rigidbody.AddForce(Vector3.up * m_jumpPower, ForceMode.Impulse);
+            m_mainPlayer.isJump = true;
+        }
+    }
+    #endregion
+
     void Start()
     {
-        m_moveSpeed = 2;
+        m_moveSpeed = 10;
         m_rotateSpeed = 30;
+        m_jumpPower = 10;
 
         m_network.Register(E_PROTOCOL.STC_SPAWN, SpawnProcess);
         m_network.Register(E_PROTOCOL.STC_MOVE, MoveProcess);
@@ -27,75 +66,52 @@ public class MainManager : MonoBehaviour
         m_network.Initialize();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        bool l_isMove = false;
-        
-        if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            m_mainPlayerData.m_position.x -= Time.deltaTime * m_moveSpeed;
-            l_isMove = true;
-        }
-        if (Input.GetKey(KeyCode.RightArrow))
-        {
-            m_mainPlayerData.m_position.x += Time.deltaTime * m_moveSpeed;
-            l_isMove = true;
-        }
-        if (Input.GetKey(KeyCode.DownArrow))
-        {
-            m_mainPlayerData.m_position.y -= Time.deltaTime * m_moveSpeed;
-            l_isMove = true;
-        }
-        if (Input.GetKey(KeyCode.UpArrow))
-        {
-            m_mainPlayerData.m_position.y += Time.deltaTime * m_moveSpeed;
-            l_isMove = true;
-        }
-        if(Input.GetKeyDown(KeyCode.Space))
-        {
-            //m_mainPlayer.GetComponent<R>()
-        }
-        if (Input.GetKey(KeyCode.Q))
-        {
-            transform.Rotate(Time.deltaTime * new Vector3(0, -m_rotateSpeed, 0));
-
-            m_mainPlayerData.m_rotation.x = transform.rotation.x;
-            m_mainPlayerData.m_rotation.y = transform.rotation.y;
-            m_mainPlayerData.m_rotation.z = transform.rotation.z;
-            m_mainPlayerData.m_rotation.w = transform.rotation.w;
-            l_isMove = true;
-        }
-        if (Input.GetKey(KeyCode.E))
-        {
-            transform.Rotate(Time.deltaTime * new Vector3(0, m_rotateSpeed, 0));
-
-            m_mainPlayerData.m_rotation.x = transform.rotation.x;
-            m_mainPlayerData.m_rotation.y = transform.rotation.y;
-            m_mainPlayerData.m_rotation.z = transform.rotation.z;
-            m_mainPlayerData.m_rotation.w = transform.rotation.w;
-            l_isMove = true;
-        }
-
-        if (l_isMove)
-        {
-            m_network.Session.Write((int)E_PROTOCOL.CTS_MOVE, m_mainPlayerData);
-        }
-
+        #region 메세지 처리 루프
+        m_network.UpdateRecvProcess();
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             m_network.End();
-            #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-            #else
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
                 Application.Quit(); // 어플리케이션 종료
-            #endif
+#endif
         }
 
-        m_network.UpdateRecvProcess();
+        #endregion
+
+        #region 플레이어 컨트롤러
+        if (m_mainPlayer != null)
+        {
+            GetInput();
+            Move();
+            Turn();
+            Jump();
+        }
+        #endregion
     }
 
 
+    const int m_SendTimeCounterF = 3;
+    int m_sendTimeCounter = 0;
+    private void FixedUpdate()
+    {
+        if (m_mainPlayer != null)
+        {
+            if (m_SendTimeCounterF <= m_sendTimeCounter)
+            {
+                m_mainPlayer.PositionAndRotationWrite(ref m_mainPlayerData);
+                m_network.Session.Write((int)E_PROTOCOL.CTS_MOVE, m_mainPlayerData);
+                m_sendTimeCounter = 0;
+            }
+            else
+            {
+                ++m_sendTimeCounter;
+            }
+        }
+    }
 
     /*=================<기능 함수(TEST용 -> 클라에 적용시에 각자 해당하는 메니저에서 유사한 기능의 함수를 제작하는 것이 좋음)>=====================*/
     void SpawnProcess()
@@ -120,21 +136,33 @@ public class MainManager : MonoBehaviour
             if (flag)
             {
                 GameObject temp = GameObject.Instantiate(playerUnit);
-                temp.GetComponent<Player>().moveData.m_id = liddata.m_list[i];
+                //temp.GetComponent<Player>().moveData.m_id = liddata.m_list[i];
                 players.Add(liddata.m_list[i], temp);
                 temp.SetActive(true);
+                if (liddata.m_list[i] != m_network.ClientId)
+                {
+                    temp.GetComponent<Rigidbody>().useGravity = false;
+                }
+                else
+                {
+                    temp.GetComponent<Rigidbody>().useGravity = true;
+                }
+                
             }
         }
 
         m_mainPlayer = players[m_network.ClientId].GetComponent<Player>();
-        m_mainPlayerData = players[m_network.ClientId].GetComponent<Player>().moveData;
+        m_mainPlayerData.m_id = m_network.ClientId;
+        followCam.target = m_mainPlayer.transform;
     }
     void MoveProcess()
     {
         PacketMoveData lData;
         m_network.Session.GetData<PacketMoveData>(out lData);
-
-        players[lData.m_id].GetComponent<Player>().moveData = lData;
+        if (lData.m_id != m_network.ClientId)
+        {
+            players[lData.m_id].GetComponent<Player>().PositionAndRotationRead(lData);
+        }
     }
     void OutProcess()
     {
