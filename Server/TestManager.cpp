@@ -1,7 +1,7 @@
 #include "TestManager.h"
 #include "LogManager.h"
 #include "SessionManager.h"
-//ㅆㄷ
+//
 #pragma region Singleton
 bool TestManager::CreateInstance()
 {
@@ -79,12 +79,11 @@ void TestManager::IdCreateProcess(Session* _session)
 	BYTE l_data[BUFSIZE];
 	ZeroMemory(l_data, BUFSIZE);
 	int l_dataSize = -1;
-	_session->m_id = m_giveIdCounter;
+	_session->SetIdNumber(m_giveIdCounter);
 	l_dataSize = IdDataMake(l_data, m_giveIdCounter);
 	m_playerList.push_back(_session);
 	m_giveIdCounter++;
 	
-
 	if (!_session->SendPacket(static_cast<int>(E_PROTOCOL::STC_IDCREATE), l_dataSize, l_data))
 	{
 		LogManager::GetInstance()->LogWrite(1005);
@@ -98,7 +97,7 @@ void TestManager::SpawnProcess(Session* _session)
 
 	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 
-
+	m_MoveDataList.insert(make_pair(_session, MoveData(_session->GetIdNumber())));
 	l_dataSize = SpawnDataMake(l_data);
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
@@ -120,10 +119,13 @@ void TestManager::PlayProcess(Session* _session)
 	int l_dataSize = -1;
 
 	MoveData moveData;
-
 	MoveDataSplit(_session->GetDataField(), moveData);
-
-	l_dataSize = MoveDataMake(l_data, moveData);
+	//
+	// 이동 가능한 움직임인지 체크 하는 부분??? 
+	//
+	m_MoveDataList.find(_session)->second.CopyData(moveData);
+	
+	l_dataSize = MoveDataMake(l_data, m_MoveDataList.find(_session)->second);
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{
@@ -143,7 +145,7 @@ void TestManager::ExitProcess(Session* _session)
 
 	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 
-	l_dataSize = ExitDataMake(l_data, _session->m_id);
+	l_dataSize = ExitDataMake(l_data, _session->GetIdNumber());
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{
@@ -159,6 +161,8 @@ void TestManager::ExitProcess(Session* _session)
 			LogManager::GetInstance()->LogWrite(1006);
 		}
 	}
+
+	m_MoveDataList.erase(_session);
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); )
 	{
@@ -183,7 +187,7 @@ void TestManager::ForceExitProcess(Session* _session)
 
 	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 
-	l_dataSize = ExitDataMake(l_data, _session->m_id);
+	l_dataSize = ExitDataMake(l_data, _session->GetIdNumber());
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{
@@ -199,6 +203,8 @@ void TestManager::ForceExitProcess(Session* _session)
 			LogManager::GetInstance()->LogWrite(1006);
 		}
 	}
+
+	m_MoveDataList.erase(_session);
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); )
 	{
@@ -233,7 +239,7 @@ int TestManager::SpawnDataMake(BYTE* _data)
 	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, static_cast<int>(m_playerList.size()));
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{
-		l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, (*iter)->m_id);
+		l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, (*iter)->GetIdNumber());
 		counter--;
 	}
 

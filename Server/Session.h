@@ -20,16 +20,14 @@ public:
 
 	bool SendPacket(unsigned int _protocol, unsigned int _datasize, BYTE* _data);
 	bool RecvPacket();
-
-
-	int m_id;
-	float m_x;
-	float m_y;
+	
+	void SetIdNumber(int _idNumber);
+	int GetIdNumber();
 private:
 	//void* m_loginInfo;
 
 	
-
+	int m_idNumber;
 
 	State* m_state;
 

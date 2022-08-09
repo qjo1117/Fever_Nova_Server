@@ -4,10 +4,12 @@
 #pragma region 持失切&社瑚切
 Session::Session() :Packet()
 {
+	m_idNumber = -1;
 	//m_loginInfo = nullptr;
 }
 Session::Session(const SOCKET& _sock) : Packet(_sock)
 {
+	m_idNumber = -1;
 	//m_loginInfo = nullptr;
 }
 //
@@ -80,5 +82,17 @@ void Session::Release()
 	{
 		delete m_testState;
 	}
+}
+#pragma endregion
+
+
+#pragma region GetSet
+void Session::SetIdNumber(int _idNumber)
+{
+	m_idNumber = _idNumber;
+}
+int Session::GetIdNumber()
+{
+	return m_idNumber;
 }
 #pragma endregion

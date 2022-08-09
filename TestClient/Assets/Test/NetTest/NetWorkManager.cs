@@ -4,185 +4,144 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
-public class NetWorkManager : MonoBehaviour
+public class NetWorkManager
 {
-    Session session;
+    public Session session;
+    public Session Session { get => session; }
 
-    private void Awake()
+    private Dictionary<int, Action> m_NetWorkProcess = new Dictionary<int, Action>();
+    public Dictionary<int, Action> NetWorkProcess { get => m_NetWorkProcess; }
+
+    private int m_clientId = -1;
+    public int ClientId { get => m_clientId; }
+    public void Initialize()
     {
-        Screen.SetResolution(600, 900, false);
-    }
-
-    void Start()
-    {
-        m_moveData.m_positionX = 0;
-        m_moveData.m_positionY = 0;
-        m_moveData.m_positionZ = 0;
-
-        m_moveData.m_rotationX = 0;
-        m_moveData.m_rotationY = 0;
-        m_moveData.m_rotationZ = 0;
-        m_moveData.m_rotationW = 0;
-
-        m_moveData.m_moveX = 100;
-        m_moveData.m_moveZ = 200;
-
-        m_moveData.m_animing = 50;
-        m_moveData.m_state = 101;
+        Register();
         session = new Session();
         session.Initialize();
     }
-    public GameObject playerUnit;
-    public List<GameObject> players = new List<GameObject>();
-
-    public PacketMoveData m_moveData;
-
-    private void Update()
+    public void Register()
     {
-        bool l_isMove = false;
-        if (Input.GetKey(KeyCode.LeftArrow))
+        m_NetWorkProcess.Add((int)E_PROTOCOL.CRYPTOKEY, KeyProcess);
+        m_NetWorkProcess.Add((int)E_PROTOCOL.STC_IDCREATE, IdProcess);
+    }
+    public void Register(E_PROTOCOL _protocol, Action _action)
+    {
+        if (m_NetWorkProcess.ContainsKey((int)_protocol) == false)
         {
-            m_moveData.m_positionX -= Time.deltaTime * 1;
-            l_isMove = true;
+            m_NetWorkProcess.Add((int)_protocol, _action);
         }
-        if (Input.GetKey(KeyCode.RightArrow))
+    }
+    private void KeyProcess()
+    {
+        session.CryptoKeyDataSetting();
+        session.Write((int)E_PROTOCOL.CTS_IDCREATE); // 접속
+    }
+    private void IdProcess()
+    {
+        int l_id = -1;
+        session.GetData(out l_id);
+        m_clientId = l_id;
+        session.Write((int)E_PROTOCOL.CTS_SPAWN); // 스폰요청
+    }
+    public void End()
+    {
+        //MoveTest.GetInstance().CloseSocket();
+        if (session.CheckConnecting())
         {
-            m_moveData.m_positionX += Time.deltaTime * 1;
-            l_isMove = true;
+            session.Write((int)E_PROTOCOL.CTS_EXIT);// 종료
+            session.TreadEnd();
+            session.CloseSocket();
         }
-        if (Input.GetKey(KeyCode.DownArrow))
-        {
-            m_moveData.m_positionY -= Time.deltaTime * 1;
-            l_isMove = true;
-        }
-        if (Input.GetKey(KeyCode.UpArrow))
-        {
-            m_moveData.m_positionY += Time.deltaTime * 1;
-            l_isMove = true;
-        }
-        if (Input.GetKey(KeyCode.Q))
-        {
-            transform.Rotate(Time.deltaTime *  new Vector3(0, -30, 0));
-            m_moveData.m_rotationX = transform.rotation.x;
-            m_moveData.m_rotationY = transform.rotation.y;
-            m_moveData.m_rotationZ = transform.rotation.z;
-            m_moveData.m_rotationW = transform.rotation.w;
-            l_isMove = true;
-        }
-        if (Input.GetKey(KeyCode.E))
-        {
-            transform.Rotate(Time.deltaTime * new Vector3(0, 30, 0));
-            m_moveData.m_rotationX = transform.rotation.x;
-            m_moveData.m_rotationY = transform.rotation.y;
-            m_moveData.m_rotationZ = transform.rotation.z;
-            m_moveData.m_rotationW = transform.rotation.w;
-            l_isMove = true;
-        }
-
-        if (l_isMove)
-        {
-            session.Write((int)E_PROTOCOL.CTS_MOVE, m_moveData);
-        }
-
-
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            //MoveTest.GetInstance().CloseSocket();
-            if (session.CheckConnecting())
-            {
-                session.Write((int)E_PROTOCOL.CTS_EXIT);// 종료
-                session.TreadEnd();
-                session.CloseSocket();
-            }
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-                Application.Quit(); // 어플리케이션 종료
-#endif
-        }
-
-
+    }
+    public void UpdateRecvProcess()
+    {
         if (session.CheckRead())
         {
-            switch (session.GetProtocol())
+            if (m_NetWorkProcess.ContainsKey(session.GetProtocol()) == true)
             {
-                case (int)E_PROTOCOL.CRYPTOKEY:
-                    {
-                        session.CryptoKeyDataSetting();
-                        session.Write((int)E_PROTOCOL.CTS_IDCREATE); // 접속
-                    }
-                    break;
-                case (int)E_PROTOCOL.STC_IDCREATE:
-                    {
-                        IDData liddata;
-                        session.GetData<IDData>(out liddata);
-                        m_moveData.m_id = liddata.m_id;
-                        session.Write((int)E_PROTOCOL.CTS_SPAWN);
-                    }
-                    break;
-                case (int)E_PROTOCOL.STC_SPAWN:
-                    {
-                        int lid;
-                        ListData liddata;
-                        session.GetData<ListData>(out liddata);
-
-                        for (int i = 0; i < liddata.m_size; i++)
-                        {
-                            if (liddata.m_list[i] == -1)
-                            {
-                                continue;
-                            }
-                            bool flag = true;
-                            foreach (GameObject obj in players)
-                            {
-                                if (obj.GetComponent<Player>().moveData.m_id == liddata.m_list[i])
-                                {
-                                    flag = false;
-                                }
-                            }
-                            if (flag)
-                            {
-                                GameObject temp = GameObject.Instantiate(playerUnit);
-                                temp.GetComponent<Player>().moveData.m_id = liddata.m_list[i];
-                                players.Add(temp);
-                                temp.SetActive(true);
-                            }
-                        }
-
-                    }
-                    break;
-                case (int)E_PROTOCOL.STC_MOVE:
-                    {
-                        int lid;
-                        float lx;
-                        float ly;
-                        PacketMoveData lData;
-                        session.GetData<PacketMoveData>(out lData);
-                        foreach (GameObject obj in players)
-                        {
-                            if (obj.GetComponent<Player>().moveData.m_id == lData.m_id)
-                            {
-                                obj.GetComponent<Player>().moveData = lData;
-                            }
-                        }
-                    }
-                    break;
-                case (int)E_PROTOCOL.STC_OUT:
-                    {
-                        int lid;
-                        IDData liddata;
-                        session.GetData<IDData>(out liddata);
-                        foreach (GameObject obj in players)
-                        {
-                            if (obj.GetComponent<Player>().moveData.m_id == liddata.m_id)
-                            {
-                                Destroy(obj);
-                                players.Remove(obj);
-                            }
-                        }
-                    }
-                    break;
+                m_NetWorkProcess[session.GetProtocol()].Invoke();
             }
+
+            //switch (session.GetProtocol())
+            //{
+            //    case (int)E_PROTOCOL.CRYPTOKEY:
+            //        {
+            //            session.CryptoKeyDataSetting();
+            //            session.Write((int)E_PROTOCOL.CTS_IDCREATE); // 접속
+            //        }
+            //        break;
+            //    case (int)E_PROTOCOL.STC_IDCREATE:
+            //        {
+            //            IDData liddata;
+            //            session.GetData<IDData>(out liddata);
+            //            m_moveData.m_id = liddata.m_id;
+            //            session.Write((int)E_PROTOCOL.CTS_SPAWN);
+            //        }
+            //        break;
+            //    case (int)E_PROTOCOL.STC_SPAWN:
+            //        {
+            //            int lid;
+            //            ListData liddata;
+            //            session.GetData<ListData>(out liddata);
+
+            //            for (int i = 0; i < liddata.m_size; i++)
+            //            {
+            //                if (liddata.m_list[i] == -1)
+            //                {
+            //                    continue;
+            //                }
+            //                bool flag = true;
+            //                foreach (GameObject obj in players)
+            //                {
+            //                    if (obj.GetComponent<Player>().moveData.m_id == liddata.m_list[i])
+            //                    {
+            //                        flag = false;
+            //                    }
+            //                }
+            //                if (flag)
+            //                {
+            //                    GameObject temp = GameObject.Instantiate(playerUnit);
+            //                    temp.GetComponent<Player>().moveData.m_id = liddata.m_list[i];
+            //                    players.Add(temp);
+            //                    temp.SetActive(true);
+            //                }
+            //            }
+
+            //        }
+            //        break;
+            //    case (int)E_PROTOCOL.STC_MOVE:
+            //        {
+            //            int lid;
+            //            float lx;
+            //            float ly;
+            //            PacketMoveData lData;
+            //            session.GetData<PacketMoveData>(out lData);
+            //            foreach (GameObject obj in players)
+            //            {
+            //                if (obj.GetComponent<Player>().moveData.m_id == lData.m_id)
+            //                {
+            //                    obj.GetComponent<Player>().moveData = lData;
+            //                }
+            //            }
+            //        }
+            //        break;
+            //    case (int)E_PROTOCOL.STC_OUT:
+            //        {
+            //            int lid;
+            //            IDData liddata;
+            //            session.GetData<IDData>(out liddata);
+            //            foreach (GameObject obj in players)
+            //            {
+            //                if (obj.GetComponent<Player>().moveData.m_id == liddata.m_id)
+            //                {
+            //                    Destroy(obj);
+            //                    players.Remove(obj);
+            //                }
+            //            }
+            //        }
+            //        break;
+            //}
         }
     }
 
