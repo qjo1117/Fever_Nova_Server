@@ -13,7 +13,8 @@ public class MainManager : MonoBehaviour
     public Dictionary<int, GameObject> players = new Dictionary<int, GameObject>();
     public float m_moveSpeed;
     public float m_rotateSpeed;
-    private Player m_player;
+    private Player m_mainPlayer;
+    public PacketMoveData m_mainPlayerData;
     // Start is called before the first frame update
     void Start()
     {
@@ -33,48 +34,52 @@ public class MainManager : MonoBehaviour
         
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            m_player.moveData.m_position.x -= Time.deltaTime * m_moveSpeed;
+            m_mainPlayerData.m_position.x -= Time.deltaTime * m_moveSpeed;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            m_player.moveData.m_position.x += Time.deltaTime * m_moveSpeed;
+            m_mainPlayerData.m_position.x += Time.deltaTime * m_moveSpeed;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            m_player.moveData.m_position.y -= Time.deltaTime * m_moveSpeed;
+            m_mainPlayerData.m_position.y -= Time.deltaTime * m_moveSpeed;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            m_player.moveData.m_position.y += Time.deltaTime * m_moveSpeed;
+            m_mainPlayerData.m_position.y += Time.deltaTime * m_moveSpeed;
             l_isMove = true;
+        }
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            //m_mainPlayer.GetComponent<R>()
         }
         if (Input.GetKey(KeyCode.Q))
         {
             transform.Rotate(Time.deltaTime * new Vector3(0, -m_rotateSpeed, 0));
 
-            m_player.moveData.m_rotation.x = transform.rotation.x;
-            m_player.moveData.m_rotation.y = transform.rotation.y;
-            m_player.moveData.m_rotation.z = transform.rotation.z;
-            m_player.moveData.m_rotation.w = transform.rotation.w;
+            m_mainPlayerData.m_rotation.x = transform.rotation.x;
+            m_mainPlayerData.m_rotation.y = transform.rotation.y;
+            m_mainPlayerData.m_rotation.z = transform.rotation.z;
+            m_mainPlayerData.m_rotation.w = transform.rotation.w;
             l_isMove = true;
         }
         if (Input.GetKey(KeyCode.E))
         {
             transform.Rotate(Time.deltaTime * new Vector3(0, m_rotateSpeed, 0));
 
-            m_player.moveData.m_rotation.x = transform.rotation.x;
-            m_player.moveData.m_rotation.y = transform.rotation.y;
-            m_player.moveData.m_rotation.z = transform.rotation.z;
-            m_player.moveData.m_rotation.w = transform.rotation.w;
+            m_mainPlayerData.m_rotation.x = transform.rotation.x;
+            m_mainPlayerData.m_rotation.y = transform.rotation.y;
+            m_mainPlayerData.m_rotation.z = transform.rotation.z;
+            m_mainPlayerData.m_rotation.w = transform.rotation.w;
             l_isMove = true;
         }
 
         if (l_isMove)
         {
-            m_network.Session.Write((int)E_PROTOCOL.CTS_MOVE, m_player.moveData);
+            m_network.Session.Write((int)E_PROTOCOL.CTS_MOVE, m_mainPlayerData);
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -121,7 +126,8 @@ public class MainManager : MonoBehaviour
             }
         }
 
-        m_player = players[m_network.ClientId].GetComponent<Player>();
+        m_mainPlayer = players[m_network.ClientId].GetComponent<Player>();
+        m_mainPlayerData = players[m_network.ClientId].GetComponent<Player>().moveData;
     }
     void MoveProcess()
     {
