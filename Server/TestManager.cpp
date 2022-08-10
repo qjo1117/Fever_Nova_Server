@@ -24,7 +24,7 @@ void TestManager::DestroyInstance()
 }
 bool TestManager::Initialize() // 초기화
 {
-	m_giveIdCounter = 1;
+	m_giveIdCounter = 100;
 	return true;
 }
 void TestManager::Release() // 후처리
@@ -91,11 +91,11 @@ void TestManager::IdCreateProcess(Session* _session)
 }
 void TestManager::SpawnProcess(Session* _session)
 {
+	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 	BYTE l_data[BUFSIZE];
 	ZeroMemory(l_data, BUFSIZE);
 	int l_dataSize = -1;
 
-	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 
 	m_MoveDataList.insert(make_pair(_session, MoveData(_session->GetIdNumber())));
 	l_dataSize = SpawnDataMake(l_data);
@@ -114,6 +114,7 @@ void TestManager::SpawnProcess(Session* _session)
 
 void TestManager::PlayProcess(Session* _session)
 {
+	LockGuard l_lockGuard(&m_criticalKey); // 잠금
 	BYTE l_data[BUFSIZE];
 	ZeroMemory(l_data, BUFSIZE);
 	int l_dataSize = -1;
@@ -125,7 +126,7 @@ void TestManager::PlayProcess(Session* _session)
 	//
 	m_MoveDataList.find(_session)->second.CopyData(moveData);
 	
-	l_dataSize = MoveDataMake(l_data, m_MoveDataList.find(_session)->second);
+	l_dataSize = MoveDataMake(l_data, moveData);
 
 	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
 	{

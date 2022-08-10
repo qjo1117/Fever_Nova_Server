@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    //public PacketMoveData moveData;
     public bool isJump;
     public Rigidbody m_rigidbody;
+    public PacketMoveData moveData;
     private void Start()
     {
         m_rigidbody = GetComponent<Rigidbody>();
@@ -16,6 +16,7 @@ public class Player : MonoBehaviour
     {
         if(collision.gameObject.tag == "Floor")
         {
+            m_rigidbody.angularVelocity = Vector3.zero;
             isJump = false;
         }
     }
@@ -41,6 +42,8 @@ public class Player : MonoBehaviour
     //}
     public void PositionAndRotationRead(in PacketMoveData _data)
     {
+        moveData = _data;
+        m_rigidbody.angularVelocity = Vector3.zero;
         gameObject.transform.SetPositionAndRotation(
             new Vector3(_data.m_position.x, _data.m_position.y, _data.m_position.z),
             new Quaternion(_data.m_rotation.x, _data.m_rotation.y, _data.m_rotation.z, _data.m_rotation.w));

@@ -55,6 +55,7 @@ public class Session
     static AutoResetEvent autoRecvEndEvent = new AutoResetEvent(false);
 
     private bool _running = true;
+    public bool Running { get => _running; }
     private Queue<byte[]> _sendQ = new Queue<byte[]>();
     private Queue<byte[]> _recvQ = new Queue<byte[]>();
     #endregion
@@ -73,12 +74,18 @@ public class Session
     {
         if (socket.Connect("127.0.0.1", 9000))
         {
+            _running = true;
             sendThread = new Thread(new ThreadStart(SendThread));
             recvThread = new Thread(new ThreadStart(RecvThread));
             sendThread.Start();
             recvThread.Start();
+            return true;
         }
-        return true;
+        else
+        {
+            return false;
+        }
+        
     }
 
     public void TreadEnd()

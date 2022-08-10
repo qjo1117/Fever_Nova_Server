@@ -13,11 +13,15 @@ public class NetWorkManager
 
     private int m_clientId = -1;
     public int ClientId { get => m_clientId; }
+
     public void Initialize()
     {
         Register();
         session = new Session();
-        session.Initialize();
+        if (session.Initialize())
+        {
+
+        }
     }
     public void Register()
     {
@@ -45,7 +49,6 @@ public class NetWorkManager
     }
     public void End()
     {
-        //MoveTest.GetInstance().CloseSocket();
         if (session.CheckConnecting())
         {
             session.Write((int)E_PROTOCOL.CTS_EXIT);// Á¾·á
@@ -55,18 +58,24 @@ public class NetWorkManager
     }
     public void UpdateRecvProcess()
     {
-        if (session.CheckRead())
+        bool flag = true;
+        while(flag)
         {
-            if (m_NetWorkProcess.ContainsKey(session.GetProtocol()) == true)
+            if (session.CheckRead())
             {
-                m_NetWorkProcess[session.GetProtocol()].Invoke();
+                if (m_NetWorkProcess.ContainsKey(session.GetProtocol()) == true)
+                {
+                    m_NetWorkProcess[session.GetProtocol()].Invoke();
+                }
+                else
+                {
+                    flag = false;
+                }
+            }
+            else
+            {
+                flag = false;
             }
         }
-    }
-
-
-    void OnApplicationQuit()
-    {
-
     }
 }

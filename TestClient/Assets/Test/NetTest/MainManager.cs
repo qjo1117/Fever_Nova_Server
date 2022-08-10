@@ -65,24 +65,19 @@ public class MainManager : MonoBehaviour
         m_network.Register(E_PROTOCOL.STC_OUT, OutProcess);
         m_network.Initialize();
     }
-
     void Update()
     {
-        #region 메세지 처리 루프
-        m_network.UpdateRecvProcess();
+        #region 플레이어 컨트롤러
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             m_network.End();
+            //m_network.protocolThread.Join();
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
                 Application.Quit(); // 어플리케이션 종료
 #endif
         }
-
-        #endregion
-
-        #region 플레이어 컨트롤러
         if (m_mainPlayer != null)
         {
             GetInput();
@@ -90,7 +85,10 @@ public class MainManager : MonoBehaviour
             Turn();
             Jump();
         }
+        
         #endregion
+
+       
     }
 
 
@@ -111,6 +109,9 @@ public class MainManager : MonoBehaviour
                 ++m_sendTimeCounter;
             }
         }
+        #region 메세지 처리 루프
+        m_network.UpdateRecvProcess();
+        #endregion
     }
 
     /*=================<기능 함수(TEST용 -> 클라에 적용시에 각자 해당하는 메니저에서 유사한 기능의 함수를 제작하는 것이 좋음)>=====================*/
@@ -125,23 +126,15 @@ public class MainManager : MonoBehaviour
             {
                 continue;
             }
-            bool flag = true;
-            foreach (int id in players.Keys)
-            {
-                if (id == liddata.m_list[i])
-                {
-                    flag = false;
-                }
-            }
-            if (flag)
+            if (!players.ContainsKey(liddata.m_list[i]))
             {
                 GameObject temp = GameObject.Instantiate(playerUnit);
-                //temp.GetComponent<Player>().moveData.m_id = liddata.m_list[i];
+                temp.GetComponent<Player>().moveData.m_id = liddata.m_list[i];
                 players.Add(liddata.m_list[i], temp);
                 temp.SetActive(true);
                 if (liddata.m_list[i] != m_network.ClientId)
                 {
-                    temp.GetComponent<Rigidbody>().useGravity = false;
+                    temp.GetComponent<Rigidbody>().useGravity = true;
                 }
                 else
                 {
@@ -150,18 +143,29 @@ public class MainManager : MonoBehaviour
                 
             }
         }
+        if(m_mainPlayer == null)
+        {
+            m_mainPlayerData.m_id = m_network.ClientId;
 
-        m_mainPlayer = players[m_network.ClientId].GetComponent<Player>();
-        m_mainPlayerData.m_id = m_network.ClientId;
-        followCam.target = m_mainPlayer.transform;
+            m_mainPlayerData.m_state = 5;
+            m_mainPlayerData.m_move.x = 15;
+            m_mainPlayerData.m_move.y = 25;
+            m_mainPlayerData.m_animing = 35;
+
+            m_mainPlayer = players[m_network.ClientId].GetComponent<Player>();
+            followCam.target = m_mainPlayer.transform;
+        }
     }
     void MoveProcess()
     {
         PacketMoveData lData;
         m_network.Session.GetData<PacketMoveData>(out lData);
-        if (lData.m_id != m_network.ClientId)
+        if (players.ContainsKey(lData.m_id))
         {
-            players[lData.m_id].GetComponent<Player>().PositionAndRotationRead(lData);
+            if (lData.m_id != m_network.ClientId)
+            {
+                players[lData.m_id].GetComponent<Player>().PositionAndRotationRead(lData);
+            }
         }
     }
     void OutProcess()
