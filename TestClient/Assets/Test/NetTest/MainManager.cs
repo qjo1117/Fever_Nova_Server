@@ -38,6 +38,8 @@ public class MainManager : MonoBehaviour
     public Player mainPlayer;
     float X;
     float Z;
+    bool walkDown;
+    bool runDown;
     bool jumpDown;
     public Vector3 lookDir;
     public Vector3 mainPlayerPos;
@@ -51,17 +53,32 @@ public class MainManager : MonoBehaviour
     {
         X = Input.GetAxis("Horizontal");
         Z = Input.GetAxis("Vertical");
+        walkDown = Input.GetKey(KeyCode.LeftShift);
         jumpDown = Input.GetKeyDown(KeyCode.Space);
+
+        if(Input.GetKeyDown(KeyCode.T))
+        {
+            m_network.Session.Write((int)E_PROTOCOL.Test);
+        }
     }
     void Move()
     {
         lookDir = new Vector3(X, 0, Z).normalized;
-        mainPlayerPos = Vector3.Lerp(mainPlayerPos, mainPlayerPos + lookDir, Time.deltaTime * Player.moveSpeed);
+        runDown = lookDir != Vector3.zero ? true : false;
+        if (walkDown)
+        {
+            mainPlayerPos = Vector3.Lerp(mainPlayerPos, mainPlayerPos + lookDir, Time.deltaTime * Player.moveSpeed * 0.3f);
+        }
+        else
+        {
+            mainPlayerPos = Vector3.Lerp(mainPlayerPos, mainPlayerPos + lookDir, Time.deltaTime * Player.moveSpeed);
+
+        }
         //mainPlayerPos += lookDir * Player.moveSpeed * Time.deltaTime;
     }
     void Turn()
     {
-        if(lookDir != Vector3.zero)
+        if (lookDir != Vector3.zero)
         {
             mainPlayerRot = Quaternion.LookRotation(lookDir);
         }
@@ -70,17 +87,28 @@ public class MainManager : MonoBehaviour
     {
         if (jumpDown && !mainPlayer.isJump)
         {
-            mainPlayer.rigbody.AddForce(Vector3.up * Player.jumpPower, ForceMode.Impulse);
+            // 브로드 케스트로 AddForce 점프
+
+            //mainPlayer.rigbody.AddForce(Vector3.up * Player.jumpPower, ForceMode.Impulse);
             mainPlayer.isJump = true;
         }
     }
+
+    public List<TestListData> TestL;
+    void TestProcess()
+    {
+        m_network.Session.GetListData<TestListData>(out TestL);
+    }
     #endregion
+
+    
 
     void Start()
     {
         m_network.Register(E_PROTOCOL.STC_SPAWN, SpawnProcess);
         m_network.Register(E_PROTOCOL.STC_MOVE, MoveProcess);
         m_network.Register(E_PROTOCOL.STC_OUT, OutProcess);
+        m_network.Register(E_PROTOCOL.Test, TestProcess);
         m_network.Initialize();
     }
     void Update()
@@ -129,6 +157,19 @@ public class MainManager : MonoBehaviour
                 m_mainPlayerData.m_rotation.z = mainPlayerRot.z;
                 m_mainPlayerData.m_rotation.w = mainPlayerRot.w;
 
+                if (walkDown && runDown)
+                {
+                    m_mainPlayerData.m_state = 1;
+                }
+                else if (runDown)
+                {
+                    m_mainPlayerData.m_state = 2;
+                }
+                else
+                {
+                    m_mainPlayerData.m_state = 0;
+                }
+
                 m_network.Session.Write((int)E_PROTOCOL.CTS_MOVE, m_mainPlayerData);
                 m_sendTimeCounter = 0;
             }
@@ -153,7 +194,7 @@ public class MainManager : MonoBehaviour
             }
             if (!players.ContainsKey(liddata.m_list[i]))
             {
-                GameObject temp = GameObject.Instantiate(playerUnit,Vector3.zero, Quaternion.identity);
+                GameObject temp = GameObject.Instantiate(playerUnit, Vector3.zero, Quaternion.identity);
                 temp.GetComponent<Player>().id = liddata.m_list[i];
                 players.Add(liddata.m_list[i], temp);
                 temp.SetActive(true);
@@ -171,7 +212,7 @@ public class MainManager : MonoBehaviour
         if (mainPlayer == null)
         {
             m_mainPlayerData.m_id = m_network.ClientId;
-            m_mainPlayerData.m_state = 5;
+            m_mainPlayerData.m_state = 0;
             m_mainPlayerData.m_move.x = 15;
             m_mainPlayerData.m_move.y = 25;
             m_mainPlayerData.m_animing = 35;
@@ -196,6 +237,22 @@ public class MainManager : MonoBehaviour
                 new Vector3(lData.m_position.x, lData.m_position.y, lData.m_position.z);
             players[lData.m_id].GetComponent<Player>().currRot =
                 new Quaternion(lData.m_rotation.x, lData.m_rotation.y, lData.m_rotation.z, lData.m_rotation.w);
+            if (lData.m_state == 1)
+            {
+                players[lData.m_id].GetComponent<Player>().animaotr.SetBool("IsRun", true);
+                players[lData.m_id].GetComponent<Player>().animaotr.SetBool("IsWalk", true);
+            }
+            else if (lData.m_state == 2)
+            {
+                players[lData.m_id].GetComponent<Player>().animaotr.SetBool("IsRun", true);
+                players[lData.m_id].GetComponent<Player>().animaotr.SetBool("IsWalk", false);
+            }
+            else
+            {
+                players[lData.m_id].GetComponent<Player>().animaotr.SetBool("IsRun", false);
+                players[lData.m_id].GetComponent<Player>().animaotr.SetBool("IsWalk", false);
+            }
+
         }
     }
     void OutProcess()

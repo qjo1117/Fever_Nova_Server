@@ -39,6 +39,8 @@ public:
 
 		STC_EXIT,
 		CTS_EXIT,
+
+		Test,
 	};
 	struct Vector2
 	{
@@ -114,6 +116,8 @@ public:
 		int m_state;
 	};
 
+	
+
 	void Function(Session* _session);
 
 	void IdCreateProcess(Session* _session);
@@ -121,6 +125,32 @@ public:
 	void PlayProcess(Session* _session);
 	void ExitProcess(Session* _session);
 	void ForceExitProcess(Session* _session);
+
+
+#pragma region 태스트용 집합
+
+#pragma pack (push, 1)
+	struct TestListData
+	{
+		TestListData(int i, short s, float f)
+		{
+			m_int = i;
+			m_short = s;
+			m_float = f;
+		}
+		int m_int;
+		short m_short;
+		float m_float;
+	};
+	void TestProcess(Session* _session);
+	int TestDataMake(BYTE* _data);
+
+	list<TestListData> TestList;
+#pragma pack(pop)
+
+#pragma endregion
+
+	
 #pragma region Packing&Unpacking
 	// packing
 	//int SpawnDataMake(BYTE* _data, int _id);

@@ -24,6 +24,8 @@ public enum E_PROTOCOL
 
     STC_EXIT,
     CTS_EXIT,
+
+    Test,
 };
 public class Session
 {
@@ -258,6 +260,26 @@ public class Session
             (Marshal.SizeOf(typeof(Data))) + DataOffset)
             );
     }
+    public void GetListData<Data>(out List<Data> _listData) 
+    {
+        byte[] recvBuffer = null;
+        int l_offset = DataOffset;
+        int l_listSize = 0;
+
+        recvBuffer = _recvQ.Dequeue();
+
+        l_listSize = BitConverter.ToInt32(recvBuffer, l_offset);
+        l_offset += sizeof(int);
+
+        _listData = new List<Data>();
+
+        for (int i = 0; i < l_listSize; i++)
+        {
+            Data temp = ByteArrayToData<Data>(recvBuffer, l_offset);
+            _listData.Add(temp);
+            l_offset += Marshal.SizeOf(typeof(Data));
+        }
+    }
     #endregion
 
     #region Util Function
@@ -283,6 +305,20 @@ public class Session
 
         IntPtr ptr = Marshal.AllocHGlobal(size);
         Marshal.Copy(buffer, 0, ptr, size);
+        T obj = (T)Marshal.PtrToStructure(ptr, typeof(T));
+        Marshal.FreeHGlobal(ptr);
+        return obj;
+    }
+    private T ByteArrayToData<T>(byte[] buffer , int startIndex)
+    {
+        int size = Marshal.SizeOf(typeof(T));
+        if (size > buffer.Length)
+        {
+            throw new Exception();
+        }
+
+        IntPtr ptr = Marshal.AllocHGlobal(size);
+        Marshal.Copy(buffer, startIndex, ptr, size);
         T obj = (T)Marshal.PtrToStructure(ptr, typeof(T));
         Marshal.FreeHGlobal(ptr);
         return obj;

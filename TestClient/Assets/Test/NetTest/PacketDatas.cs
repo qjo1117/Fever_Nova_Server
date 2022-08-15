@@ -75,3 +75,15 @@ public struct ListData
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 5)]
     public int[] m_list;
 }
+
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
+[Serializable]
+public struct TestListData
+{
+    [MarshalAs(UnmanagedType.I4)]
+    public int m_int;
+    [MarshalAs(UnmanagedType.I2)]
+    public short m_short;
+    [MarshalAs(UnmanagedType.I4)]
+    public float m_float;
+}

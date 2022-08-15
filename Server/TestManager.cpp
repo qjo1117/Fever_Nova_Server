@@ -25,6 +25,15 @@ void TestManager::DestroyInstance()
 bool TestManager::Initialize() // 초기화
 {
 	m_giveIdCounter = 100;
+
+#pragma region 태스트용
+	TestList.push_back(TestListData(101, 85, 15.125f));
+	TestList.push_back(TestListData(111, 185, 915.125f));
+	TestList.push_back(TestListData(121, 285, 815.125f));
+	TestList.push_back(TestListData(131, 385, 115.125f));
+#pragma endregion
+
+	
 	return true;
 }
 void TestManager::Release() // 후처리
@@ -67,6 +76,9 @@ void TestManager::Function(Session* _session)
 		break;
 	case TestManager::E_PROTOCOL::CTS_EXIT:
 		ExitProcess(_session);
+		break;
+	case TestManager::E_PROTOCOL::Test:
+		TestProcess(_session);
 		break;
 	default:
 		LogManager::GetInstance()->LogWrite(7777);
@@ -222,7 +234,6 @@ void TestManager::ForceExitProcess(Session* _session)
 	return;
 }
 
-
 int TestManager::IdDataMake(BYTE* _data, int _id)
 {
 	int l_packedSize = 0;
@@ -285,3 +296,40 @@ void TestManager::MoveDataSplit(BYTE* _data, MoveData& _moveData)
 	memcpy(&_moveData, l_focusPointer, sizeof(MoveData));
 	l_focusPointer = l_focusPointer + sizeof(MoveData);
 }
+
+
+
+#pragma region 태스트용
+void TestManager::TestProcess(Session* _session)
+{
+	LockGuard l_lockGuard(&m_criticalKey); // 잠금
+	BYTE l_data[BUFSIZE];
+	ZeroMemory(l_data, BUFSIZE);
+	int l_dataSize = -1;
+
+	l_dataSize = TestDataMake(l_data);
+
+	for (list<Session*>::iterator iter = m_playerList.begin(); iter != m_playerList.end(); iter++)
+	{
+		if (!(*iter)->SendPacket(static_cast<int>(E_PROTOCOL::Test), l_dataSize, l_data))
+		{
+			LogManager::GetInstance()->LogWrite(1005);
+		}
+	}
+
+	return;
+}
+
+int TestManager::TestDataMake(BYTE* _data)
+{
+	int l_packedSize = 0;
+	BYTE* l_focusPointer = _data;
+	l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, static_cast<int>(TestList.size()));
+	for (list<TestListData>::iterator iter = TestList.begin(); iter != TestList.end(); iter++)
+	{
+		l_focusPointer = MemoryCopy(l_focusPointer, l_packedSize, (*iter));
+	}
+
+	return l_packedSize;
+}
+#pragma endregion

@@ -8,7 +8,7 @@ public class Player : MonoBehaviour
     public int id;
     public const float moveSpeed = 20.0f;
     public const float rotateSpeed = 50.0f;
-    public const float jumpPower = 10.0f;
+    public const float jumpPower = 50.0f;
 
     public Rigidbody rigbody;
     public Transform trans;
@@ -18,13 +18,16 @@ public class Player : MonoBehaviour
 
     public bool isJump = false;
 
+
+    public Animator animaotr;
     private void Awake()
     {
         rigbody = GetComponent<Rigidbody>();
         trans = GetComponent<Transform>();
-        rigbody.centerOfMass = new Vector3(0.0f, -0.75f, 0.0f);// 무게중심 변경
+        rigbody.centerOfMass = new Vector3(0.0f, -0.5f, 0.0f);// 무게중심 변경
         currPos = trans.position;
         currRot = trans.rotation;
+        animaotr = GetComponentInChildren<Animator>();
     }
 
     private void Update()
